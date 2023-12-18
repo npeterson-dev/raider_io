@@ -6,71 +6,6 @@ void main() {
   runApp(MyApp());
 }
 
-class TextViewsScreen extends StatefulWidget {
-  @override
-  _TextViewsScreenState createState() => _TextViewsScreenState();
-}
-
-
-class _TextViewsScreenState extends State<TextViewsScreen> {
-  Container _buildTextView(String text) {
-    return Container(
-      width: 58,
-      height: 30,
-      margin: EdgeInsets.only(top: 12),
-      decoration: BoxDecoration(
-        color: Colors.grey[800],
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Center(
-        child: Text(
-          text,
-          style: TextStyle(
-            color: Colors.white,
-            fontSize: 16,
-          ),
-        ),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-        title: Text('TextViews in Flutter'),
-    ),
-    body: Padding(
-        padding: EdgeInsets.all(16),
-        child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-       children: [
-      Row(
-         children: [
-         _buildTextView('...'),
-       SizedBox(width: 24),
-          _buildTextView('...'),
-       SizedBox(width: 24),
-          _buildTextView('...'),
-     ],
-    ),
-       SizedBox(height: 16),
-      Row(
-       children: [
-          _buildTextView('...'),
-       SizedBox(width: 24),
-          _buildTextView('...'),
-       SizedBox(width: 24),
-         _buildTextView('...'),
-         ],
-      ),
-       SizedBox(height: 16),
-        ],
-       ),
-      ),
-    );
-  }
-}
 class CharacterData {
   final String name;
   final String server;
@@ -105,43 +40,6 @@ class CharacterData {
   });
 }
 
-class CharacterViewModel extends ChangeNotifier {
-  late CharacterData characterData;
-
-  void fetchData(String characterName, String serverName) async {
-    final response = await http.get(Uri.parse(
-        'https://raider.io/api/v1/characters/profile?region=us&realm=$serverName&name=$characterName&fields=mythic_plus_scores_by_season%3Acurrent%2Cguild%2Cmythic_plus_ranks'));
-
-    if (response.statusCode == 200) {
-      final jsonData = json.decode(response.body);
-
-      // Parse JSON and assign values to characterData properties
-      // ...
-
-      characterData = CharacterData(
-        name: jsonData['name'],
-        server: jsonData['realm'],
-        guild: jsonData.containsKey('guild') ? jsonData['guild']['name'] : 'No Guild Listed',
-        spec: jsonData['active_spec_name'],
-        worldRank: jsonData['mythic_plus_ranks']['overall']['world'],
-        regionRank: jsonData['mythic_plus_ranks']['overall']['region'],
-        realmRank: jsonData['mythic_plus_ranks']['overall']['realm'],
-        dpsWorldRank: jsonData['mythic_plus_ranks']['class_dps']['world'],
-        dpsRegionRank: jsonData['mythic_plus_ranks']['class_dps']['region'],
-        dpsRealmRank: jsonData['mythic_plus_ranks']['class_dps']['realm'],
-        healWorldRank: jsonData['mythic_plus_ranks']['class_healer']['world'],
-        healRegionRank: jsonData['mythic_plus_ranks']['class_healer']['region'],
-        healRealmRank: jsonData['mythic_plus_ranks']['class_healer']['realm'],
-        mythicPlusScore: jsonData['mythic_plus_scores_by_season'][0]['scores']['all'].toDouble(),
-      );
-
-      notifyListeners();
-    } else {
-      throw Exception('Failed to load data');
-    }
-  }
-}
-
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -151,7 +49,65 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class YourFlutterWidget extends StatelessWidget {
+class YourFlutterWidget extends StatefulWidget {
+  @override
+  _YourFlutterWidgetState createState() => _YourFlutterWidgetState();
+}
+
+class _YourFlutterWidgetState extends State<YourFlutterWidget> {
+
+  // Initialize characterData with default values
+  late CharacterData characterData = CharacterData(
+    name: '',
+    server: '',
+    guild: '',
+    spec: '',
+    worldRank: 0,
+    regionRank: 0,
+    realmRank: 0,
+    dpsWorldRank: 0,
+    dpsRegionRank: 0,
+    dpsRealmRank: 0,
+    healWorldRank: 0,
+    healRegionRank: 0,
+    healRealmRank: 0,
+    mythicPlusScore: 0.0,
+  );
+  final characterTextField = TextEditingController();
+  final serverTextField = TextEditingController();
+
+  void fetchData(String characterName, String serverName) async {
+    final response = await http.get(Uri.parse(
+        'https://raider.io/api/v1/characters/profile?region=us&realm=$serverName&name=$characterName&fields=mythic_plus_scores_by_season%3Acurrent%2Cguild%2Cmythic_plus_ranks'));
+
+    if (response.statusCode == 200) {
+      final jsonData = json.decode(response.body);
+
+      setState(() {
+        characterData = CharacterData(
+          name: jsonData['name'],
+          server: jsonData['realm'],
+          guild: jsonData.containsKey('guild')
+              ? jsonData['guild']['name']
+              : 'No Guild Listed',
+          spec: jsonData['active_spec_name'],
+          worldRank: jsonData['mythic_plus_ranks']['overall']['world'],
+          regionRank: jsonData['mythic_plus_ranks']['overall']['region'],
+          realmRank: jsonData['mythic_plus_ranks']['overall']['realm'],
+          dpsWorldRank: jsonData['mythic_plus_ranks']['class_dps']['world'],
+          dpsRegionRank: jsonData['mythic_plus_ranks']['class_dps']['region'],
+          dpsRealmRank: jsonData['mythic_plus_ranks']['class_dps']['realm'],
+          healWorldRank: jsonData['mythic_plus_ranks']['class_healer']['world'],
+          healRegionRank: jsonData['mythic_plus_ranks']['class_healer']['region'],
+          healRealmRank: jsonData['mythic_plus_ranks']['class_healer']['realm'],
+          mythicPlusScore: jsonData['mythic_plus_scores_by_season'][0]['scores']['all'].toDouble(),
+        );
+      });
+    } else {
+      throw Exception('Failed to load data');
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -159,7 +115,7 @@ class YourFlutterWidget extends StatelessWidget {
         title: Text('RaiderIO'),
       ),
       body: Directionality(
-        textDirection: TextDirection.ltr, // Adjust according to your app's direction
+        textDirection: TextDirection.ltr,
         child: Container(
           color: Color(0xFF070707),
           padding: EdgeInsets.all(16.0),
@@ -169,7 +125,11 @@ class YourFlutterWidget extends StatelessWidget {
               SizedBox(height: 16.0),
               Row(
                 children: [
-                  Image.asset('assets/raiderio_image.png', width: 105, height: 104),
+                  Image.asset(
+                    'assets/rio_image.png',
+                    width: 105,
+                    height: 104,
+                  ),
                   SizedBox(width: 8.0),
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -206,6 +166,7 @@ class YourFlutterWidget extends StatelessWidget {
                 children: [
                   Expanded(
                     child: TextField(
+                      controller: characterTextField,
                       decoration: InputDecoration(
                         hintText: 'Character',
                         hintStyle: TextStyle(color: Color(0xFF9F9D9D)),
@@ -216,6 +177,7 @@ class YourFlutterWidget extends StatelessWidget {
                   SizedBox(width: 8.0),
                   Expanded(
                     child: TextField(
+                      controller: serverTextField,
                       decoration: InputDecoration(
                         hintText: 'Server',
                         hintStyle: TextStyle(color: Color(0xFF9F9D9D)),
@@ -226,112 +188,104 @@ class YourFlutterWidget extends StatelessWidget {
                   SizedBox(width: 8.0),
                   ElevatedButton(
                     onPressed: () {
-                      // Perform search action
+                      String characterName = characterTextField.text;
+                      String serverName = serverTextField.text;
+                      fetchData(characterName, serverName);
                     },
                     child: Text('Search'),
                   ),
                   SizedBox(width: 8.0),
                   ElevatedButton(
                     onPressed: () {
-                      // Clear fields
+                      setState(() {
+                        characterData = CharacterData(
+                          name: '',
+                          server: '',
+                          guild: '',
+                          spec: '',
+                          worldRank: 0,
+                          regionRank: 0,
+                          realmRank: 0,
+                          dpsWorldRank: 0,
+                          dpsRegionRank: 0,
+                          dpsRealmRank: 0,
+                          healWorldRank: 0,
+                          healRegionRank: 0,
+                          healRealmRank: 0,
+                          mythicPlusScore: 0.0,
+                        );
+                      });
+                      characterTextField.clear();
+                      serverTextField.clear();
                     },
                     child: Text('Clear'),
                   ),
                 ],
               ),
-              // Add more widgets here to replicate your UI
+              SizedBox(height: 16.0),
+              // Display fetched data
+              if (characterData != null) ...[
+                Text(
+                  'Name: ${characterData.name}',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Server: ${characterData.server}',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Guild: ${characterData.guild}',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Spec: ${characterData.spec}',
+                  style: TextStyle(color: Colors.white),
+                ),
+                Text(
+                  'Mythic Plus Score: ${characterData.mythicPlusScore}',
+                  style: TextStyle(color: Colors.pink),
+                ),
+                Text(
+                  'World Rank: ${characterData.worldRank}',
+                  style: TextStyle(color: Colors.orange),
+                ),
+                Text(
+                  'Region Rank: ${characterData.regionRank}',
+                  style: TextStyle(color: Colors.orange),
+                ),
+                Text(
+                  'Realm Rank: ${characterData.realmRank}',
+                  style: TextStyle(color: Colors.orange),
+                ),
+                Text(
+                  'DPS World Rank: ${characterData.dpsWorldRank}',
+                  style: TextStyle(color: Colors.lightBlue),
+                ),
+                Text(
+                  'DPS Region Rank: ${characterData.dpsRegionRank}',
+                  style: TextStyle(color: Colors.lightBlue),
+                ),
+                Text(
+                  'DPS Realm Rank: ${characterData.dpsRealmRank}',
+                  style: TextStyle(color: Colors.lightBlue),
+                ),
+                Text(
+                  'Heal World Rank: ${characterData.healWorldRank}',
+                  style: TextStyle(color: Colors.green),
+                ),
+                Text(
+                  'Heal Region Rank: ${characterData.healRegionRank}',
+                  style: TextStyle(color: Colors.green),
+                ),
+                Text(
+                  'Heal Realm Rank: ${characterData.healRealmRank}',
+                  style: TextStyle(color: Colors.green),
+                ),
+              ],
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
-}
-
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
-
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
-    return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
